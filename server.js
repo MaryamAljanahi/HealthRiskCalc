@@ -10,15 +10,16 @@ const port = process.env.PORT || 8080;
 app.use(cors({ origin: '*', optionsSuccessStatus: 200 }));
 app.use(bodyParser.json());
 
-// Serve frontend files (HTML, CSS, JS)
-app.use(express.static(path.join(__dirname, "public")));
+// ✅ Fix: Use absolute path to serve frontend files
+const publicPath = path.join(__dirname, "public");
+app.use(express.static(publicPath));
 
-// Serve index.html when visiting "/"
+// ✅ Fix: Send correct index.html path
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+    res.sendFile(path.join(publicPath, "index.html"));
 });
 
-// API Endpoint: Calculate Risk
+// API Endpoint
 app.post("/calculate-risk", (req, res) => {
     const { age, weight, height, bloodPressure, familyHistory } = req.body;
 
@@ -27,14 +28,13 @@ app.post("/calculate-risk", (req, res) => {
     }
 
     const bmi = weight / (height * height);
-    let riskScore = bmi * 10; // Example calculation
+    let riskScore = bmi * 10;
 
-    // Add family history points
     let familyHistoryPoints = 0;
     if (familyHistory?.diabetes) familyHistoryPoints += 10;
     if (familyHistory?.cancer) familyHistoryPoints += 10;
     if (familyHistory?.alzheimers) familyHistoryPoints += 10;
-    riskScore += familyHistoryPoints;  // Include in final risk score
+    riskScore += familyHistoryPoints;
 
     const riskCategory = riskScore > 50 ? "High Risk" : "Low Risk";
 
@@ -46,7 +46,7 @@ app.post("/calculate-risk", (req, res) => {
     });
 });
 
-// Start the server
+// Start server
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
