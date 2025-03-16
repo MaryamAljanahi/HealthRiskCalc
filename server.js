@@ -10,15 +10,15 @@ const port = process.env.PORT || 8080;
 app.use(cors({ origin: '*', optionsSuccessStatus: 200 }));
 app.use(bodyParser.json());
 
-// **Serve static files from the current directory (Azure uses this)**
-app.use(express.static(__dirname));
+// Serve frontend files (HTML, CSS, JS)
+app.use(express.static(path.join(__dirname, "public")));
 
-// **Serve the index.html file when visiting the root ("/")**
+// Serve index.html when visiting "/"
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "index.html"));
+    res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// API Endpoint
+// API Endpoint: Calculate Risk
 app.post("/calculate-risk", (req, res) => {
     const { age, weight, height, bloodPressure, familyHistory } = req.body;
 
@@ -26,25 +26,27 @@ app.post("/calculate-risk", (req, res) => {
         return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const bmi = calculateBMI(weight, height);
-    const { riskScore, breakdown, bmiCategory, bpCategory } = calculateRisk(age, bmi, bloodPressure, familyHistory);
+    const bmi = weight / (height * height);
+    let riskScore = bmi * 10; // Example calculation
 
-    let riskCategory;
-    if (riskScore <= 50) riskCategory = "Moderate risk";
-    else if (riskScore <= 75) riskCategory = "High risk";
-    else riskCategory = "Uninsurable";
+    // Add family history points
+    let familyHistoryPoints = 0;
+    if (familyHistory?.diabetes) familyHistoryPoints += 10;
+    if (familyHistory?.cancer) familyHistoryPoints += 10;
+    if (familyHistory?.alzheimers) familyHistoryPoints += 10;
+    riskScore += familyHistoryPoints;  // Include in final risk score
+
+    const riskCategory = riskScore > 50 ? "High Risk" : "Low Risk";
 
     res.json({
         riskScore,
         riskCategory,
         bmi: bmi.toFixed(2),
-        bmiCategory,
-        bpCategory,
-        breakdown
+        familyHistoryPoints
     });
 });
 
 // Start the server
 app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+    console.log(`Server running on port ${port}`);
 });
