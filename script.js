@@ -16,8 +16,8 @@ document.getElementById("risk-form").addEventListener("submit", function(event) 
         alert("Please enter a valid weight greater than 0.");
         return;
     }
-    if (isNaN(height) || height <= 0) {
-        alert("Please enter a valid height (e.g., 1.75).");
+    if (isNaN(height) || height <= 0 || !/^\d+(\.\d{1,2})?$/.test(height)) {
+        alert("Please enter a valid height (e.g., 1.75). Max 2 decimal places.");
         return;
     }
     if (isNaN(bloodPressure) || bloodPressure < 0) {
@@ -39,30 +39,41 @@ document.getElementById("risk-form").addEventListener("submit", function(event) 
     };
 
     // Send data to backend
-    fetch('/calculate-risk', {
+    fetch('https://healthriskcalc-anc8bhhwesasd7dx.uaenorth-01.azurewebsites.net/calculate-risk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
     })
         .then(response => {
             if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
+                throw new Error('HTTP error! Status: ${response.status}');
             }
             return response.json();
         })
         .then(data => {
             document.getElementById("risk-score").innerHTML = `<strong>Risk Score:</strong> ${data.riskScore}`;
             document.getElementById("risk-category").innerHTML = `<strong>Category:</strong> ${data.riskCategory}`;
-            document.getElementById("bmi-result").innerHTML = `<strong>BMI:</strong> ${data.bmi}`;
-            document.getElementById("bp-result").innerHTML = `<strong>Blood Pressure:</strong> Normal`;
+            document.getElementById("bmi-result").innerHTML = `<strong>BMI:</strong> ${data.bmi} 
+        <br> <small>Formula: ${data.bmi} kg ÷ (${data.bmi} m × ${data.bmi} m)</small>`;
+            document.getElementById("bp-result").innerHTML = `<strong>Blood Pressure Category:</strong> Normal`;
 
-            // Display family history points
-            document.getElementById("risk-breakdown").innerHTML = `<p><strong>Family History Points:</strong> ${data.familyHistoryPoints}</p>`;
+            // Display detailed risk breakdown
+            let breakdownHTML = "<p><strong>Risk Breakdown:</strong></p><ul>";
+            data.breakdown.forEach(item => {
+                breakdownHTML += <li>${item.factor}: +${item.points} points</li>;
+            });
+            breakdownHTML += "</ul>";
+            document.getElementById("risk-breakdown").innerHTML = breakdownHTML;
 
             document.getElementById("result").classList.remove("hidden");
+            window.scrollTo({
+                top: document.getElementById("result").offsetTop, // Scroll to the risk summary
+                behavior: "smooth" // Smooth scroll effect
+            });
         })
+
         .catch(error => {
             console.error('Error:', error);
-            alert(`An error occurred: ${error.message}`);
+            alert('An error occurred: ${error.message}');
         });
 });
