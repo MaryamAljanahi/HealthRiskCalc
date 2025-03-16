@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "run": "node health.js"
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": "18.x"
   },
   "repository": {
     "type": "git",
