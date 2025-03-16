@@ -6,21 +6,26 @@ const path = require("path");
 const app = express();
 const port = process.env.PORT || 8080;
 
-// CORS Options
+// Enable CORS
 app.use(cors({ origin: '*', optionsSuccessStatus: 200 }));
 
 // Middleware
 app.use(bodyParser.json());
 
-// Serve static frontend files
-app.use(express.static(path.join(__dirname, 'public')));
+// ✅ Serve static frontend files from the 'public' folder
+app.use(express.static(path.join(__dirname, "public")));
 
-// Default route (Serve index.html)
+// ✅ Default route should serve the index.html file
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Your existing API route
+// ✅ Health check route (useful for debugging)
+app.get("/health", (req, res) => {
+    res.send("Server is running correctly!");
+});
+
+// API route for calculating risk
 app.post("/calculate-risk", (req, res) => {
     const { age, weight, height, bloodPressure, familyHistory } = req.body;
 
