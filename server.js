@@ -15,11 +15,6 @@ var corsOptions = {
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
-//default route
-app.get('/', function (req, res) {
-    res.send('Hello World!');
-});
-
 // Helper function to calculate BMI
 function calculateBMI(weight, height) {
     return weight / (height * height);
